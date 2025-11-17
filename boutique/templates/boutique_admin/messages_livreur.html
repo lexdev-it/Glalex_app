@@ -1,0 +1,57 @@
+{% include 'includes/admin_theme_head.html' %}
+<body>
+<nav class="navbar navbar-light bg-light shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-semibold" href="{% url 'admin_dashboard' %}"><i class="bi bi-shield-lock text-brand me-2"></i>Admin</a>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-dark btn-icon" href="{% url 'admin_inbox' %}" title="Boîte de réception">
+        <i class="bi bi-inbox"></i><span class="sr-only">Boîte de réception</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<main class="container my-4">
+  <div class="card shadow-sm">
+    <div class="card-header bg-white d-flex align-items-center justify-content-between">
+      <h5 class="mb-0"><i class="bi bi-truck me-2"></i>Livreur: {{ livreur.username }}</h5>
+    </div>
+    <div class="card-body">
+      {% if thread %}
+        <div class="vstack gap-3 mb-4">
+          {% for m in thread %}
+            {% if m.sender_id == request.user.id %}
+              <div class="d-flex justify-content-end">
+                <div class="p-3 rounded bg-brand-50 text-dark" style="max-width: 720px;">
+                  <div class="small text-muted mb-1">{{ m.sender.username }} · {{ m.created_at|date:'d/m/Y H:i' }}</div>
+                  <div>{{ m.body|linebreaksbr }}</div>
+                </div>
+              </div>
+            {% else %}
+              <div class="d-flex justify-content-start">
+                <div class="p-3 rounded bg-light" style="max-width: 720px;">
+                  <div class="small text-muted mb-1">{{ m.sender.username }} · {{ m.created_at|date:'d/m/Y H:i' }}</div>
+                  <div>{{ m.body|linebreaksbr }}</div>
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted">Aucun message pour le moment.</p>
+      {% endif %}
+
+      <form method="post" class="vstack gap-3">
+        {% csrf_token %}
+        <div>
+          <label class="form-label">Envoyer un message</label>
+          <textarea class="form-control" name="body" rows="4" placeholder="Votre message..."></textarea>
+        </div>
+        <div>
+          <button type="submit" class="btn btn-brand"><i class="bi bi-send me-1"></i>Envoyer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+</body>

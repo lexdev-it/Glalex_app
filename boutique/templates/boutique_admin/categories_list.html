@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Catégories – Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'admin_dashboard' %}">Dashboard Admin</a>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    {% if messages %}
+      {% for m in messages %}
+        <div class="alert alert-{{ m.tags }}">{{ m }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="d-flex align-items-center mb-3">
+      <h1 class="h4 mb-0">Catégories</h1>
+      <a href="{% url 'admin_categorie_add' %}" class="btn btn-success btn-sm ms-auto">Ajouter une catégorie</a>
+    </div>
+
+    <div class="alert alert-info">TODO: Ajouter le CRUD complet des catégories.</div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nom</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in categories %}
+            <tr>
+              <td>{{ c.id }}</td>
+              <td>{{ c.nom }}</td>
+              <td class="text-end">
+                <a href="{% url 'admin_categorie_edit' c.id %}" class="btn btn-sm btn-primary">Modifier</a>
+                <form method="post" action="{% url 'admin_categorie_delete' c.id %}" class="d-inline" onsubmit="return confirm('Supprimer {{ c.nom }} ?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="3" class="text-center text-muted">Aucune catégorie.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

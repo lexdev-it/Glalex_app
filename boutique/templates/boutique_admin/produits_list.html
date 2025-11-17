@@ -1,0 +1,148 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Produits – Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'admin_dashboard' %}">Dashboard Admin</a>
+      <div class="d-flex">
+        <a href="{% url 'admin_produit_add' %}" class="btn btn-success btn-sm">Ajouter un produit</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    {% if messages %}
+      {% for m in messages %}
+        <div class="alert alert-{{ m.tags }}">{{ m }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="d-flex align-items-center mb-3 gap-3">
+      <h1 class="h4 mb-0">Produits</h1>
+      <form method="get" class="ms-auto d-flex align-items-center gap-2 flex-wrap" role="search">
+        <input type="text" class="form-control" placeholder="Rechercher..." name="q" value="{{ q }}" style="max-width: 220px;" />
+        <select name="cat" class="form-select" style="max-width: 220px;">
+          <option value="">Toutes catégories</option>
+          {% for c in categories %}
+            <option value="{{ c.id }}" {% if cat|stringformat:'s' == c.id|stringformat:'s' %}selected{% endif %}>{{ c.nom }}</option>
+          {% endfor %}
+        </select>
+        <select name="actif" class="form-select" style="max-width: 160px;">
+          <option value="" {% if not actif %}selected{% endif %}>Tous</option>
+          <option value="1" {% if actif == '1' %}selected{% endif %}>Actifs</option>
+          <option value="0" {% if actif == '0' %}selected{% endif %}>Inactifs</option>
+        </select>
+        <select name="per_page" class="form-select" style="max-width: 120px;">
+          {% for opt in allowed_pp %}
+            <option value="{{ opt }}" {% if per_page == opt %}selected{% endif %}>{{ opt }}/page</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-outline-primary" type="submit">Filtrer</button>
+      </form>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nom</th>
+            <th>Catégorie</th>
+            <th>Prix</th>
+            <th>Stock</th>
+            <th>Actif</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in produits %}
+            <tr>
+              <td>{{ p.id }}</td>
+              <td>{{ p.nom }}</td>
+              <td>{{ p.categorie.nom }}</td>
+              <td>{{ p.prix }}</td>
+              <td>{{ p.stock }}</td>
+              <td>
+                {% if p.actif %}
+                  <span class="badge text-bg-success">Oui</span>
+                {% else %}
+                  <span class="badge text-bg-secondary">Non</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <a href="{% url 'admin_produit_edit' p.id %}" class="btn btn-sm btn-primary">Modifier</a>
+                <form method="post" action="{% url 'admin_produit_delete' p.id %}" class="d-inline" onsubmit="return confirm('Supprimer {{ p.nom }} ?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="text-center text-muted">Aucun produit.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page_obj %}
+      <nav aria-label="Pagination produits" class="mt-4">
+        <ul class="pagination justify-content-center">
+          <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+            <a class="page-link" href="?{% if q %}q={{ q|urlencode }}&{% endif %}{% if cat %}cat={{ cat }}&{% endif %}{% if actif %}actif={{ actif }}&{% endif %}{% if per_page %}per_page={{ per_page }}&{% endif %}page=1" tabindex="-1">« Première</a>
+          </li>
+          <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+            <a class="page-link" href="?{% if q %}q={{ q|urlencode }}&{% endif %}{% if cat %}cat={{ cat }}&{% endif %}{% if actif %}actif={{ actif }}&{% endif %}{% if per_page %}per_page={{ per_page }}&{% endif %}page={{ page_obj.previous_page_number }}">‹ Précédent</a>
+          </li>
+
+          {% if page_obj.paginator.num_pages > 7 %}
+            {% with current=page_obj.number total=page_obj.paginator.num_pages %}
+              {% if current > 3 %}
+                <li class="page-item"><a class="page-link" href="?{% if q %}q={{ q|urlencode }}&{% endif %}{% if cat %}cat={{ cat }}&{% endif %}{% if actif %}actif={{ actif }}&{% endif %}{% if per_page %}per_page={{ per_page }}&{% endif %}page=1">1</a></li>
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+              {% endif %}
+              {% for num in current|add:'-2'|default_if_none:1|make_list %}{% endfor %}
+              {% for num in page_obj.paginator.page_range %}
+                {% if num >= current|add:'-2' and num <= current|add:'2' %}
+                  {% if num == current %}
+                    <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
+                  {% else %}
+                    <li class="page-item"><a class="page-link" href="?{% if q %}q={{ q|urlencode }}&{% endif %}{% if cat %}cat={{ cat }}&{% endif %}{% if actif %}actif={{ actif }}&{% endif %}{% if per_page %}per_page={{ per_page }}&{% endif %}page={{ num }}">{{ num }}</a></li>
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+              {% if current < total|add:'-2' %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+                <li class="page-item"><a class="page-link" href="?{% if q %}q={{ q|urlencode }}&{% endif %}{% if cat %}cat={{ cat }}&{% endif %}{% if actif %}actif={{ actif }}&{% endif %}{% if per_page %}per_page={{ per_page }}&{% endif %}page={{ total }}">{{ total }}</a></li>
+              {% endif %}
+            {% endwith %}
+          {% else %}
+            {% for num in page_obj.paginator.page_range %}
+              {% if num == page_obj.number %}
+                <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
+              {% else %}
+                <li class="page-item"><a class="page-link" href="?{% if q %}q={{ q|urlencode }}&{% endif %}{% if cat %}cat={{ cat }}&{% endif %}{% if actif %}actif={{ actif }}&{% endif %}{% if per_page %}per_page={{ per_page }}&{% endif %}page={{ num }}">{{ num }}</a></li>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+
+          <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+            <a class="page-link" href="?{% if q %}q={{ q|urlencode }}&{% endif %}{% if cat %}cat={{ cat }}&{% endif %}{% if actif %}actif={{ actif }}&{% endif %}{% if per_page %}per_page={{ per_page }}&{% endif %}page={{ page_obj.next_page_number }}">Suivant ›</a>
+          </li>
+          <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+            <a class="page-link" href="?{% if q %}q={{ q|urlencode }}&{% endif %}{% if cat %}cat={{ cat }}&{% endif %}{% if actif %}actif={{ actif }}&{% endif %}{% if per_page %}per_page={{ per_page }}&{% endif %}page={{ page_obj.paginator.num_pages }}">Dernière »</a>
+          </li>
+        </ul>
+      </nav>
+    {% endif %}
+  </div>
+</body>
+</html>

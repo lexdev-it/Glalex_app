@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% if mode == 'edit' %}Modifier Catégorie{% else %}Ajouter Catégorie{% endif %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'admin_dashboard' %}">Dashboard Admin</a>
+      <a class="btn btn-outline-light ms-auto" href="{% url 'admin_categories_list' %}">Retour</a>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    {% if messages %}
+      {% for m in messages %}
+        <div class="alert alert-{{ m.tags }}">{{ m }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <h1 class="h4 mb-3">{% if mode == 'edit' %}Modifier Catégorie{% else %}Ajouter Catégorie{% endif %}</h1>
+
+    <form method="post" class="card p-3 shadow-sm">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">Nom</label>
+        <input name="nom" class="form-control" value="{% if categorie %}{{ categorie.nom }}{% endif %}" required />
+      </div>
+      <div>
+        <button class="btn btn-primary" type="submit">Enregistrer</button>
+        <a href="{% url 'admin_categories_list' %}" class="btn btn-secondary">Annuler</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

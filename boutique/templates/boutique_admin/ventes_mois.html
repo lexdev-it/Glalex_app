@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <title>Admin | Ventes du mois ({{ start }} → {{ end }})</title>
+  {% include 'includes/admin_theme_head.html' %}
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg bg-white border-bottom">
+    <div class="container">
+      <a class="navbar-brand" href="/admin-dashboard/">Glalex Admin</a>
+      <div class="ms-auto d-flex gap-2">
+        <a class="btn btn-outline-secondary" href="/">Accueil</a>
+        <a class="btn btn-outline-primary" href="{% url 'admin_ventes_jour' %}">Jour</a>
+        <a class="btn btn-primary fw-semibold" href="{% url 'admin_ventes_mois' %}">Mois</a>
+        <a class="btn btn-outline-primary" href="{% url 'admin_ventes_annee' %}">Année</a>
+      </div>
+    </div>
+  </nav>
+  <main class="container py-4">
+    {% include 'includes/back_button.html' %}
+    <h1 class="h4 mb-3">Ventes du mois ({{ start }} → {{ end }})</h1>
+    <form method="get" class="row g-2 mb-3">
+      <div class="col-md-6">
+        <input type="text" name="q" value="{{ q|default:'' }}" class="form-control" placeholder="Rechercher par numéro de commande ou client...">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-brand">Rechercher</button>
+      </div>
+      {% if q %}
+      <div class="col-auto">
+        <a href="?" class="btn btn-outline-secondary">Réinitialiser</a>
+      </div>
+      {% endif %}
+    </form>
+    <div class="table-responsive">
+      <table class="table table-striped align-middle card-elev">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Numéro</th>
+            <th>Client</th>
+            <th>Date</th>
+            <th>Total</th>
+            <th>Paiement</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in commandes %}
+            {% ifchanged c.date_commande|date:"d/m/Y" %}
+            <tr class="table-secondary">
+              <td colspan="6" class="fw-semibold">Date: {{ c.date_commande|date:"d/m/Y" }}</td>
+            </tr>
+            {% endifchanged %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td><a href="/facture/{{ c.numero_commande }}/" target="_blank">{{ c.numero_commande }}</a></td>
+              <td>{{ c.client.username }}</td>
+              <td>{{ c.date_commande|date:"d/m/Y H:i" }}</td>
+              <td>{{ c.total }} FCFA</td>
+              <td><span class="badge text-bg-success">Payé</span></td>
+            </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center text-muted">Aucune vente payée pour ce mois.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="d-flex justify-content-end">
+      <div class="fs-5">Total mois: <strong>{{ total }} FCFA</strong></div>
+    </div>
+  </main>
+</body>
+</html>

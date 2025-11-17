@@ -1,0 +1,24 @@
+Bonjour {{ user.get_full_name|default:user.username }},
+
+Merci pour votre commande chez Glalex !
+
+Numéro de commande: {{ commande.numero_commande }}
+Date: {{ commande.date_commande|date:'d/m/Y H:i' }}
+Paiement: {{ commande.get_payment_method_display|default:'—' }} ({{ commande.get_payment_status_display }})
+
+Adresse de livraison:
+{{ commande.nom_complet }}
+{{ commande.adresse_livraison }}
+{{ commande.ville }}
+Téléphone: {{ commande.telephone }}
+
+Détails:
+{% for d in commande.details.all %}- {{ d.produit.nom }} x{{ d.quantite }} = {{ d.sous_total|floatformat:0 }} FCFA
+{% endfor %}
+Total: {{ commande.total|floatformat:0 }} FCFA
+
+Vous pouvez consulter et imprimer votre facture ici:
+{{ request_scheme|default:'http' }}://{{ request_host|default:'localhost:8000' }}/facture/{{ commande.numero_commande }}/
+
+Merci pour votre confiance.
+Glalex

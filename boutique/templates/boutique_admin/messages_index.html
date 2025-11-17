@@ -1,0 +1,109 @@
+{% include 'includes/admin_theme_head.html' %}
+<body>
+<nav class="navbar navbar-light bg-light shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-semibold" href="{% url 'admin_dashboard' %}"><i class="bi bi-shield-lock text-brand me-2"></i>Admin</a>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-dark btn-icon" href="{% url 'accueil' %}" title="Accueil client">
+        <i class="bi bi-house"></i><span class="sr-only">Accueil client</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<main class="container my-4">
+  <div class="row g-4">
+    <!-- Boîte à suggestions (clients) -->
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-white d-flex align-items-center justify-content-between">
+          <h5 class="mb-0"><i class="bi bi-inbox me-2"></i>Boîte à suggestions</h5>
+          {% if admin_unread_total %}
+            <span class="badge bg-danger">{{ admin_unread_total }} non lus</span>
+          {% endif %}
+        </div>
+        <div class="list-group list-group-flush">
+          {% for u in suggesters %}
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" 
+               href="{% url 'admin_messages' client_id=u.id %}">
+              <span><i class="bi bi-person me-2"></i>{{ u.username }}</span>
+              {% if u.unread_count %}
+                <span class="badge bg-danger">{{ u.unread_count }}</span>
+              {% endif %}
+            </a>
+          {% empty %}
+            <div class="list-group-item text-muted">Aucune suggestion pour le moment.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    
+    <!-- Messages des livreurs -->
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-white d-flex align-items-center justify-content-between">
+          <h5 class="mb-0"><i class="bi bi-truck me-2"></i>Messages des livreurs</h5>
+          {% with total=0 %}
+            {% for u in livreurs %}
+              {% if u.unread_count %}
+                {% with total=total|add:u.unread_count %}{% endwith %}
+              {% endif %}
+            {% endfor %}
+            {% if total > 0 %}
+              <span class="badge bg-danger">{{ total }} non lus</span>
+            {% endif %}
+          {% endwith %}
+        </div>
+        <div class="list-group list-group-flush">
+          {% for u in livreurs %}
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" 
+               href="{% url 'admin_livreur_messages' livreur_id=u.id %}">
+              <span><i class="bi bi-person-gear me-2"></i>{{ u.username }}</span>
+              {% if u.unread_count %}
+                <span class="badge bg-danger">{{ u.unread_count }}</span>
+              {% endif %}
+            </a>
+          {% empty %}
+            <div class="list-group-item text-muted">Aucun message de livreur.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Derniers messages reçus -->
+  <div class="card shadow-sm mt-4">
+    <div class="card-header bg-white">
+      <h5 class="mb-0"><i class="bi bi-chat-left-text me-2"></i>Derniers messages reçus</h5>
+    </div>
+    <div class="card-body">
+      {% if messages_list %}
+        <div class="list-group list-group-flush">
+          {% for msg in messages_list %}
+            {% if forloop.counter <= 10 %}
+              <div class="list-group-item">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="mb-1">
+                    <i class="bi bi-{% if msg.sender.profillivreur %}truck{% else %}person{% endif %} me-2"></i>
+                    {{ msg.sender.username }}
+                    <small class="text-muted">({{ msg.created_at|date:'d/m/Y H:i' }})</small>
+                  </h6>
+                  {% if not msg.is_read %}<span class="badge bg-danger">Nouveau</span>{% endif %}
+                </div>
+                <p class="mb-1">{{ msg.body|truncatechars:100 }}</p>
+                <small>
+                  <a href="{% if msg.sender.profillivreur %}{% url 'admin_livreur_messages' livreur_id=msg.sender.id %}{% else %}{% url 'admin_messages' client_id=msg.sender.id %}{% endif %}">
+                    Voir la conversation <i class="bi bi-arrow-right"></i>
+                  </a>
+                </small>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">Aucun message reçu.</p>
+      {% endif %}
+    </div>
+  </div>
+</main>
+</body>

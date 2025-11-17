@@ -1,0 +1,148 @@
+{% include 'includes/admin_theme_head.html' %}
+<body>
+<nav class="navbar navbar-light bg-light shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-semibold" href="/"><i class="bi bi-bag text-brand me-2"></i>Boutique</a>
+    <div class="d-flex gap-2 align-items-center">
+      {% if request.user.is_authenticated %}
+        <span class="badge text-bg-light border d-none d-md-inline-flex align-items-center" title="Connecté">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/></svg>
+          {{ request.user.username }}
+        </span>
+      {% endif %}
+      <a class="btn btn-outline-dark btn-icon" href="/" title="Accueil">
+        <i class="bi bi-house"></i><span class="sr-only">Accueil</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<main class="container my-4">
+  <div class="d-flex align-items-center mb-3">
+    <a class="btn btn-outline-secondary btn-sm me-2" href="{% url 'accueil' %}"><i class="bi bi-arrow-left"></i> Retour</a>
+    <h4 class="mb-0">Messagerie livreur</h4>
+  </div>
+  {% if messages %}
+    <div class="mb-3">
+      {% for message in messages %}
+        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} mb-2" role="alert">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link {% if active_tab == 'admin' %}active{% endif %}" href="{% url 'livreur_messages' %}?tab=admin#tab-admin" role="tab" aria-controls="tab-admin" aria-selected="{% if active_tab == 'admin' %}true{% else %}false{% endif %}">Administration</a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link {% if active_tab == 'clients' %}active{% endif %}" href="{% url 'livreur_messages' %}?tab=clients#tab-clients" role="tab" aria-controls="tab-clients" aria-selected="{% if active_tab == 'clients' %}true{% else %}false{% endif %}">Clients</a>
+    </li>
+  </ul>
+
+  <div class="tab-content pt-3">
+    <!-- Admin tab -->
+    <div class="tab-pane fade {% if active_tab == 'admin' %}show active{% endif %}" id="tab-admin" role="tabpanel">
+      <div class="card shadow-sm">
+        <div class="card-body d-flex flex-column" style="max-height: 65vh;">
+          <div class="flex-grow-1 pe-1" style="overflow-y:auto;">
+            {% if thread %}
+              {% for m in thread %}
+                {% if m.sender_id != request.user.id %}
+                  <div class="d-flex mb-3 justify-content-start">
+                    <div class="p-2 rounded-3" style="max-width: 80%; background:#f1f3f5; color:#212529;">
+                      <div class="small mb-1" style="color:#6c757d !important;">{{ m.sender.username }} • {{ m.created_at|date:"d/m/Y H:i" }}</div>
+                      <div style="white-space: pre-line;">{{ m.body }}</div>
+                    </div>
+                  </div>
+                {% else %}
+                  <div class="d-flex mb-3 justify-content-end">
+                    <div class="p-2 rounded-3" style="max-width: 80%; background:#0d6efd; color:#fff;">
+                      <div class="small mb-1" style="color:rgba(255,255,255,.8) !important;">Vous • {{ m.created_at|date:"d/m/Y H:i" }}</div>
+                      <div style="white-space: pre-line;">{{ m.body }}</div>
+                    </div>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <div class="text-center text-muted py-5">Aucun message de l'administration.</div>
+            {% endif %}
+          </div>
+          <div class="pt-3 border-top">
+            <form method="post" class="d-flex gap-2">
+              {% csrf_token %}
+              <input type="hidden" name="admin_message" value="1">
+              <textarea class="form-control" name="body" rows="1" placeholder="Répondre à l'administration..."></textarea>
+              <button class="btn btn-primary" type="submit"><i class="bi bi-send"></i></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clients tab -->
+    <div class="tab-pane fade {% if active_tab == 'clients' %}show active{% endif %}" id="tab-clients" role="tabpanel">
+      <div class="row g-3">
+        <div class="col-12 col-md-4">
+          <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold">Clients</div>
+            <div class="list-group list-group-flush" style="max-height:60vh; overflow-y:auto;">
+              {% for u in clients %}
+                <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if selected_client and selected_client.id == u.id %}active{% endif %}" href="{% url 'livreur_messages' %}?tab=clients&client={{ u.id }}">
+                  <span><i class="bi bi-person me-2"></i>{{ u.username }}</span>
+                </a>
+              {% empty %}
+                <div class="text-muted p-3">Aucun client assigné pour l'instant.</div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-8">
+          <div class="card shadow-sm h-100">
+            <div class="card-header bg-white d-flex align-items-center justify-content-between">
+              <span class="fw-semibold"><i class="bi bi-chat-dots me-2"></i>{% if selected_client %}Discussion avec {{ selected_client.username }}{% else %}Sélectionnez un client{% endif %}</span>
+            </div>
+            <div class="card-body d-flex flex-column" style="max-height:60vh;">
+              <div class="flex-grow-1 pe-1" style="overflow-y:auto;">
+                {% if selected_client %}
+                  {% if client_thread %}
+                    {% for m in client_thread %}
+                      {% if m.sender_id != request.user.id %}
+                        <div class="d-flex mb-3 justify-content-start">
+                          <div class="p-2 rounded-3" style="max-width: 80%; background:#f1f3f5; color:#212529;">
+                            <div class="small mb-1" style="color:#6c757d !important;">{{ selected_client.username }} • {{ m.created_at|date:"d/m/Y H:i" }}</div>
+                            <div style="white-space: pre-line;">{{ m.body }}</div>
+                          </div>
+                        </div>
+                      {% else %}
+                        <div class="d-flex mb-3 justify-content-end">
+                          <div class="p-2 rounded-3" style="max-width: 80%; background:#0d6efd; color:#fff;">
+                            <div class="small mb-1" style="color:rgba(255,255,255,.8) !important;">Vous • {{ m.created_at|date:"d/m/Y H:i" }}</div>
+                            <div style="white-space: pre-line;">{{ m.body }}</div>
+                          </div>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  {% else %}
+                    <div class="text-center text-muted py-5">Aucun message pour le moment.</div>
+                  {% endif %}
+                {% else %}
+                  <div class="text-center text-muted py-5">Choisissez un client pour commencer la discussion.</div>
+                {% endif %}
+              </div>
+              <div class="pt-3 border-top">
+                <form method="post" class="d-flex gap-2">
+                  {% csrf_token %}
+                  <input type="hidden" name="client_id" value="{% if selected_client %}{{ selected_client.id }}{% endif %}">
+                  <textarea class="form-control" name="body" rows="1" placeholder="Écrire un message..." {% if not selected_client %}disabled{% endif %}></textarea>
+                  <button class="btn btn-primary" type="submit" {% if not selected_client %}disabled{% endif %}><i class="bi bi-send"></i></button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>

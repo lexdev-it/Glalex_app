@@ -1,0 +1,402 @@
+{% load static %}{% load humanize %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <title>Glalex | Boutique d'accessoires féminins</title>
+  {% include 'includes/admin_theme_head.html' %}
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" referrerpolicy="no-referrer" />
+  <style>
+    /* Palette */
+    :root{
+      --primary: #007BFF; /* Bleu */
+      --success: #28A745; /* Vert succès */
+      --danger: #DC3545;  /* Rouge erreur */
+      --bg: #F8F9FA;      /* Gris clair fond */
+      --text: #333333;    /* Texte principal */
+    }
+
+    /* Base */
+    body{ background: var(--bg); color: var(--text); font-family: 'Roboto', system-ui, -apple-system, Segoe UI, Arial, sans-serif; }
+    h1, h2, h3, h4, h5, h6{ font-family: 'Montserrat', sans-serif; color: var(--primary); }
+    h1{ font-size: 28px; }
+    p{ font-family: 'Roboto', sans-serif; font-size:16px; color:#333; }
+
+    /* Buttons aligned with palette */
+    .btn-brand, .btn-primary{ background: var(--primary); border-color: var(--primary); color:#fff; }
+    .btn-brand:hover, .btn-primary:hover{ filter: brightness(.95); color:#fff; }
+    .btn-outline-dark{ color:#333; border-color:#333; }
+    .btn-outline-dark:hover{ background:#333; color:#fff; }
+    .btn-success{ background: var(--success); border-color: var(--success); }
+    .btn-danger{ background: var(--danger); border-color: var(--danger); }
+
+    /* Alerts (au cas où) */
+    .alert-success{ background: #e9f7ef; border-color:#d4edda; color: var(--success); }
+    .alert-danger{ background: #fdecea; border-color:#f5c6cb; color: var(--danger); }
+
+    /* Navbar brand color tweak */
+    .navbar-brand{ color: var(--primary); font-weight:700; }
+    .navbar-brand:hover{ color: var(--primary); }
+
+    .hero{ background: linear-gradient(90deg, rgba(0,123,255,.10), rgba(0,123,255,.03)); border-radius: 16px; overflow: hidden; position: relative; }
+    .hero::after{ content:""; position:absolute; inset:0; background: none; opacity:0; }
+    .feature-icon{ width:42px; height:42px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:#e9f2ff; color:var(--primary); }
+    .card-product{ border:1px solid #e9ecef; border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,.04); transition: transform .18s ease, box-shadow .18s ease; background:#fff; }
+    .card-product:hover{ transform: translateY(-2px); box-shadow:0 8px 18px rgba(0,0,0,.08); }
+    /* Image square ratio + hover zoom */
+    .ratio-1x1{ position:relative; width:100%; padding-top:100%; overflow:hidden; border-top-left-radius:14px; border-top-right-radius:14px; background:#f7f7f9; }
+    .ratio-1x1 img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition: transform .4s ease; opacity:0; }
+    .card-product:hover .ratio-1x1 img{ transform: scale(1.06); }
+    .card-product .card-body{ padding:0.85rem 1rem; }
+    .card-title{ font-size:1.02rem; line-height:1.25; color:#222; }
+    .price{ font-weight:800; color:#111; font-size:1.02rem; }
+    .cat-anchor{ scroll-margin-top: 90px; }
+    .cat-chip{ background:#fff; color:var(--primary); border:1px solid rgba(0,123,255,.35); }
+    .section-head{ border-bottom:1px solid #f0f0f0; padding-bottom:.35rem; margin-bottom:.9rem; }
+    .footer-muted{ color:#8b8f93; }
+    /* Minimal wishlist heart (visuel) */
+    .btn-wish{ position:absolute; top:10px; right:10px; z-index:2; width:36px; height:36px; border-radius:50%; border:0; background:rgba(255,255,255,.9); color:var(--primary); display:inline-flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+    .btn-wish:hover{ background:#fff; }
+    /* Full-width add button on small screens */
+    @media (max-width: 576px){ .card-product .form-control{ max-width: 72px; } }
+
+    /* Skeleton loading for product images */
+    .ratio-1x1.skel::before{
+      content:""; position:absolute; inset:0; background: linear-gradient(90deg, #f0f0f0 25%, #e6e6e6 37%, #f0f0f0 63%);
+      background-size: 400% 100%; animation: shimmer 1.2s infinite; border-top-left-radius:14px; border-top-right-radius:14px;
+    }
+    @keyframes shimmer{ 0%{ background-position: 100% 0; } 100%{ background-position: -100% 0; } }
+
+    /* Floating actions */
+    .floating-actions{ position:fixed; right:16px; bottom:16px; display:flex; flex-direction:column; gap:10px; z-index:1030; }
+    .fab{ width:52px; height:52px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; box-shadow:0 8px 22px rgba(0,0,0,.15); border:0; }
+    .fab.whatsapp{ background:#25D366; color:#fff; }
+    .fab.top{ background:#111; color:#fff; }
+    .fab:hover{ filter:brightness(.93); }
+
+    /* Toast position */
+    .toast-container{ position: fixed; right: 16px; bottom: 88px; z-index: 1080; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg bg-white border-bottom py-2">
+    <div class="container">
+      <a class="navbar-brand" href="/">Glalex</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainnav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainnav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="/">Accueil</a></li>
+        </ul>
+        <div class="ms-auto d-flex align-items-center gap-2">
+          {% if request.user.is_authenticated %}
+            <span class="badge text-bg-light border d-none d-md-inline-flex align-items-center" title="Connecté">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/></svg>
+              {{ request.user.username }}
+              <span class="online-dot" aria-label="en ligne"></span>
+            </span>
+          {% endif %}
+          {% if not request.user.is_authenticated %}
+            <a class="btn btn-outline-secondary btn-icon position-relative" href="/panier/" title="Panier">
+              <i class="fas fa-shopping-cart"></i>
+              {% if cart_count %}
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ cart_count }}</span>
+              {% endif %}
+              <span class="sr-only">Panier</span>
+            </a>
+          {% elif not request.user.is_staff and not request.user.is_superuser and not request.user.profillivreur %}
+            <a class="btn btn-outline-secondary btn-icon position-relative" href="/panier/" title="Panier">
+              <i class="fas fa-shopping-cart"></i>
+              {% if cart_count %}
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ cart_count }}</span>
+              {% endif %}
+              <span class="sr-only">Panier</span>
+            </a>
+          {% endif %}
+          {% if request.user.is_authenticated %}
+            {% if request.user.is_staff or request.user.is_superuser %}
+              {% if not request.user.profillivreur %}
+                <a class="btn btn-outline-primary btn-icon" href="{% url 'admin_inbox' %}" title="Messages">
+                  <i class="fas fa-comments"></i>
+                  <span class="sr-only">Messages</span>
+                </a>
+              {% endif %}
+            {% elif request.user.profillivreur %}
+              <a class="btn btn-outline-primary btn-icon" href="{% url 'livreur_messages' %}" title="Messages">
+                <i class="fas fa-comments"></i>
+                <span class="sr-only">Messages</span>
+              </a>
+            {% else %}
+              <a class="btn btn-outline-primary btn-icon position-relative" href="{% url 'client_messages' %}" title="Messages">
+                <i class="fas fa-comments"></i>
+                {% if messages_unread_total and messages_unread_total > 0 %}
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ messages_unread_total }}
+                    <span class="visually-hidden">messages non lus</span>
+                  </span>
+                {% endif %}
+                <span class="sr-only">Messages</span>
+              </a>
+            {% endif %}
+          {% else %}
+            <a class="btn btn-outline-dark" href="{% url 'connexion' %}?next={{ request.path }}">Se connecter</a>
+            <a class="btn btn-primary" href="{% url 'inscription' %}?next={{ request.path }}">S'inscrire</a>
+          {% endif %}
+          {% if request.user.is_authenticated %}
+            {% if request.user.is_staff or request.user.is_superuser %}
+              {% if not request.user.profillivreur %}
+                <a class="btn btn-dark btn-icon" href="{% url 'admin_dashboard' %}" title="Espace Admin">
+                  <i class="fas fa-shield-halved"></i>
+                  <span class="sr-only">Espace Admin</span>
+                </a>
+              {% endif %}
+            {% endif %}
+          {% endif %}
+          {% if request.user.is_authenticated and request.user.profillivreur %}
+            <a class="btn btn-outline-success btn-icon position-relative" href="{% url 'livreur_dashboard' %}" title="Espace Livreur">
+              <i class="fas fa-truck"></i>
+              {% if unassigned_count and unassigned_count > 0 %}
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ unassigned_count }}</span>
+              {% endif %}
+              <span class="sr-only">Espace Livreur</span>
+            </a>
+          {% endif %}
+          {% if request.user.is_authenticated %}
+            <a class="btn btn-outline-dark" href="/deconnexion/">Se déconnecter</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  {% if messages %}
+    <div class="container mt-2">
+      {% for m in messages %}
+        <div class="alert alert-{{ m.tags }}">{{ m }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <main class="container py-5">
+    <section class="hero p-5 mb-5 position-relative">
+      <div class="row align-items-center position-relative" style="z-index:1;">
+        <div class="col-lg-7">
+          <span class="badge badge-soft mb-3">Nouveautés & Tendances</span>
+          <h1 class="display-5 fw-bold mb-3">Glalex — Accessoires féminins modernes</h1>
+          <p class="text-muted mb-4">Sublimez votre style avec des pièces sélectionnées: bijoux, sacs, lunettes & plus. Livraison rapide et service client attentionné.</p>
+          <div class="d-flex gap-2">
+            <a href="#produits" class="btn btn-brand btn-lg">Découvrir les produits</a>
+            {% if not request.user.is_authenticated %}
+              <a href="/panier/" class="btn btn-outline-dark btn-lg">Voir mon panier</a>
+            {% elif not request.user.is_staff and not request.user.is_superuser and not request.user.profillivreur %}
+              <a href="/panier/" class="btn btn-outline-dark btn-lg">Voir mon panier</a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-lg-5 d-none d-lg-block">
+          <img src="{% static 'images/hero_mock.png' %}" class="img-fluid" alt="Glalex Hero" onerror="this.style.display='none'">
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-4">
+      <div class="row g-4 text-center">
+        <div class="col-12 col-md-4">
+          <div class="p-3 border rounded-4 h-100">
+            <div class="feature-icon mb-2">🚚</div>
+            <h6 class="mb-1">Livraison rapide</h6>
+            <div class="text-muted small">Partout en ville</div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="p-3 border rounded-4 h-100">
+            <div class="feature-icon mb-2">💳</div>
+            <h6 class="mb-1">Paiement sécurisé</h6>
+            <div class="text-muted small">Confiance et sérénité</div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="p-3 border rounded-4 h-100">
+            <div class="feature-icon mb-2">🤝</div>
+            <h6 class="mb-1">Support réactif</h6>
+            <div class="text-muted small">On s'occupe de vous</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {# Barre de recherche + tri #}
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
+      <form method="get" class="d-flex" role="search" style="max-width:560px; width:100%;">
+        <input type="hidden" name="sort" value="{{ request.GET.sort|default:'new' }}">
+        <input type="text" class="form-control me-2" name="q" value="{{ request.GET.q }}" placeholder="Rechercher un accessoire (ex: sac, bijoux)...">
+        <button class="btn btn-primary" type="submit">Rechercher</button>
+      </form>
+      <form method="get" class="ms-md-auto d-flex align-items-center gap-2">
+        <input type="hidden" name="q" value="{{ request.GET.q }}">
+        <label for="sort" class="text-muted small mb-0">Trier:</label>
+        <select id="sort" name="sort" class="form-select form-select-sm" onchange="this.form.submit()">
+          <option value="new" {% if request.GET.sort == 'new' or not request.GET.sort %}selected{% endif %}>Nouveautés</option>
+          <option value="price_asc" {% if request.GET.sort == 'price_asc' %}selected{% endif %}>Prix: moins cher</option>
+          <option value="price_desc" {% if request.GET.sort == 'price_desc' %}selected{% endif %}>Prix: plus cher</option>
+        </select>
+      </form>
+    </div>
+    {# Quick-nav des catégories #}
+    {% regroup produits by categorie as categories %}
+    {% if categories %}
+      <div class="d-flex flex-wrap gap-2 mb-4">
+        <a href="#produits" class="btn btn-sm cat-chip">Toutes</a>
+        {% for c in categories %}
+          <a href="#cat-{{ c.grouper.id }}" class="btn btn-sm cat-chip">{{ c.grouper.nom }}</a>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div id="produits" class="mb-3">
+      <h2 class="h4 m-0">Nos produits</h2>
+    </div>
+
+    {# Affichage groupé par catégorie #}
+    {% for c in categories %}
+      <section id="cat-{{ c.grouper.id }}" class="cat-anchor mb-4">
+        <div class="d-flex align-items-baseline justify-content-between section-head">
+          <h3 class="h5 m-0">{{ c.grouper.nom }}</h3>
+          <a class="text-decoration-none" href="#top">Haut ↑</a>
+        </div>
+        <div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4">
+          {% for p in c.list %}
+            <div class="col">
+              <div class="card card-product h-100">
+                <div class="ratio-1x1 skel">
+                  <button type="button" class="btn-wish" title="Favori" aria-label="Ajouter aux favoris">
+                    <i class="fas fa-heart"></i>
+                  </button>
+                  {% if p.image %}
+                    <img src="{{ p.image.url }}" alt="{{ p.nom }}" loading="lazy">
+                  {% else %}
+                    <img src="{% static 'images/placeholder_product.jpg' %}" alt="Image indisponible" loading="lazy">
+                  {% endif %}
+                </div>
+                <div class="card-body d-flex flex-column">
+                  <div class="d-flex justify-content-between align-items-start mb-1">
+                    <h5 class="card-title mb-0">{{ p.nom }}</h5>
+                  </div>
+                  <p class="card-text text-muted small mb-3">{{ p.description|truncatewords:14 }}</p>
+                  <div class="mt-auto d-flex justify-content-between align-items-center pt-2">
+                    <strong class="price">{{ p.prix|floatformat:0|intcomma }} FCFA</strong>
+                    <form method="post" action="{% url 'add_to_cart' p.id %}" class="d-flex align-items-center gap-2 add-to-cart-form">
+                      {% csrf_token %}
+                      <input type="number" name="qty" class="form-control form-control-sm" value="1" min="1" max="100" style="width:76px;">
+                      <button type="submit" class="btn btn-sm btn-brand">
+                        <i class="fas fa-cart-plus me-1"></i>Ajouter
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    {% empty %}
+      <div class="alert alert-info">Aucun produit disponible.</div>
+    {% endfor %}
+  </main>
+
+  <footer class="border-top py-4 text-center footer-muted">
+    <div class="container"> Glalex — Accessoires féminins</div>
+  </footer>
+
+  <!-- Floating actions: WhatsApp + Back to top -->
+  <div class="floating-actions">
+    <a id="waBtn" class="fab whatsapp" href="https://wa.me/?text=Bonjour%20Glalex" target="_blank" rel="noopener" title="WhatsApp">
+      <i class="fab fa-whatsapp fa-lg"></i>
+    </a>
+    <button id="toTopBtn" class="fab top" type="button" title="Haut de page" style="display:none;">
+      <i class="fas fa-arrow-up"></i>
+    </button>
+  </div>
+
+  <!-- Toast container -->
+  <div class="toast-container">
+    <div id="cartToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">
+          Produit ajouté au panier.
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fermer"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Image skeleton: reveal on load
+    document.querySelectorAll('.ratio-1x1.skel img').forEach(function(img){
+      function reveal(){
+        var parent = img.closest('.ratio-1x1');
+        if(parent){ parent.classList.remove('skel'); }
+        img.style.opacity = '1';
+      }
+      if(img.complete){ reveal(); }
+      else { img.addEventListener('load', reveal); img.addEventListener('error', reveal); }
+    });
+
+    // Back to top button
+    (function(){
+      const btn = document.getElementById('toTopBtn');
+      const onScroll = ()=>{ btn.style.display = window.scrollY > 300 ? 'inline-flex' : 'none'; };
+      window.addEventListener('scroll', onScroll, { passive:true });
+      btn.addEventListener('click', ()=> window.scrollTo({ top:0, behavior:'smooth' }));
+      onScroll();
+    })();
+
+    // Add-to-cart progressive enhancement (AJAX), fallback to normal submit
+    (function(){
+      function getCSRF(form){
+        const el = form.querySelector('input[name="csrfmiddlewaretoken"]');
+        return el ? el.value : '';
+      }
+      function updateCartBadge(qty){
+        const btns = document.querySelectorAll('a[title="Panier"] .badge');
+        btns.forEach(function(b){
+          const current = parseInt(b.textContent.trim() || '0');
+          const next = (isNaN(current)?0:current) + qty;
+          b.textContent = String(next);
+        });
+      }
+      const toastEl = document.getElementById('cartToast');
+      const cartToast = toastEl ? new bootstrap.Toast(toastEl, { delay: 1800 }) : null;
+      document.querySelectorAll('form.add-to-cart-form').forEach(function(form){
+        form.addEventListener('submit', function(e){
+          const qtyInput = form.querySelector('input[name="qty"]');
+          const qty = parseInt(qtyInput && qtyInput.value ? qtyInput.value : '1');
+          // Try AJAX
+          e.preventDefault();
+          fetch(form.action, {
+            method: 'POST',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRFToken': getCSRF(form)
+            },
+            body: new FormData(form),
+            credentials: 'same-origin'
+          }).then(function(res){
+            if(res.ok){
+              if(cartToast){ cartToast.show(); }
+              if(!isNaN(qty)){ updateCartBadge(qty); }
+            } else {
+              form.submit(); // fallback if server rejects AJAX
+            }
+          }).catch(function(){
+            form.submit(); // network issue -> normal submit
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
