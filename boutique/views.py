@@ -126,6 +126,8 @@ def accueil(request):
         "unread_count": unread_count,
         "unassigned_count": unassigned_count,
         "categories": categories,
+        "wa_number": getattr(settings, "WHATSAPP_NUMBER", ""),
+        "wa_text": getattr(settings, "WHATSAPP_DEFAULT_TEXT", "Bonjour"),
     })
 
 
@@ -183,7 +185,12 @@ def client_boutique(request):
     produits = Produit.objects.filter(actif=True).order_by('-date_creation')
     cart = request.session.get('cart', {}) or {}
     cart_count = sum(cart.values()) if isinstance(cart, dict) else 0
-    return render(request, "client/index.html", {"produits": produits, "cart_count": cart_count})
+    return render(request, "client/index.html", {
+        "produits": produits,
+        "cart_count": cart_count,
+        "wa_number": getattr(settings, "WHATSAPP_NUMBER", ""),
+        "wa_text": getattr(settings, "WHATSAPP_DEFAULT_TEXT", "Bonjour"),
+    })
 
 
 def client_commandes(request):
@@ -1055,6 +1062,9 @@ def admin_livreur_add(request):
         zone_livraison = request.POST.get('zone_livraison', '').strip()
         actif = request.POST.get('actif') == 'on'
         photo = request.FILES.get('photo')
+        date_naissance = request.POST.get('date_naissance') or None
+        numero_cni = request.POST.get('numero_cni', '').strip() or None
+        quartier = request.POST.get('quartier', '').strip()
 
         if not username or not password:
             messages.error(request, "Nom d'utilisateur et mot de passe sont requis.")
@@ -1070,6 +1080,9 @@ def admin_livreur_add(request):
                 zone_livraison=zone_livraison or '',
                 actif=actif,
                 photo=photo,
+                date_naissance=date_naissance,
+                numero_cni=numero_cni,
+                quartier=quartier or '',
             )
             messages.success(request, f"Livreur '{username}' créé avec succès.")
             return redirect('admin_livreurs_list')
@@ -1092,6 +1105,9 @@ def admin_livreur_edit(request, livreur_id: int):
         actif = request.POST.get('actif') == 'on'
         new_password = request.POST.get('password', '').strip()
         new_photo = request.FILES.get('photo')
+        date_naissance = request.POST.get('date_naissance') or None
+        numero_cni = request.POST.get('numero_cni', '').strip() or None
+        quartier = request.POST.get('quartier', '').strip()
         try:
             with transaction.atomic():
                 if username and username != profil.user.username:
@@ -1108,6 +1124,9 @@ def admin_livreur_edit(request, livreur_id: int):
                 profil.actif = actif
                 if new_photo:
                     profil.photo = new_photo
+                profil.date_naissance = date_naissance
+                profil.numero_cni = numero_cni
+                profil.quartier = quartier
                 profil.save()
             messages.success(request, "Livreur modifié avec succès.")
             return redirect('admin_livreurs_list')
@@ -1134,6 +1153,54 @@ def admin_livreur_delete(request, livreur_id: int):
             messages.error(request, f"Erreur: {e}")
         return redirect('admin_livreurs_list')
     messages.info(request, f"Confirmer la désactivation du livreur: {profil.user.username}")
+    return redirect('admin_livreurs_list')
+
+
+@login_required
+def admin_livreur_reset_password(request, livreur_id: int):
+    if request.method != 'POST':
+        return redirect('admin_livreur_edit', livreur_id=livreur_id)
+    if not is_app_admin(request.user):
+        messages.error(request, "Accès refusé: réservé à l'administrateur de l'application.")
+        return redirect('accueil')
+    profil = get_object_or_404(ProfilLivreur.objects.select_related('user'), pk=livreur_id)
+    temp_pwd = secrets.token_urlsafe(8)
+    profil.user.set_password(temp_pwd)
+    profil.user.save(update_fields=['password'])
+    messages.success(request, f"Mot de passe du livreur réinitialisé. Nouveau mot de passe temporaire: {temp_pwd}")
+    try:
+        if profil.user.email:
+            subject = "Réinitialisation mot de passe Livreur"
+            body = (
+                f"Bonjour {profil.user.username},\n\n"
+                f"Votre mot de passe a été réinitialisé par l'administrateur.\n"
+                f"Nouveau mot de passe temporaire: {temp_pwd}\n\n"
+                f"Merci de vous connecter et de le changer immédiatement."
+            )
+            EmailMessage(subject, body, getattr(settings, 'DEFAULT_FROM_EMAIL', None), [profil.user.email]).send(fail_silently=True)
+    except Exception:
+        pass
+    return redirect('admin_livreur_edit', livreur_id=livreur_id)
+
+
+@login_required
+def admin_livreur_set_password(request, livreur_id: int):
+    if request.method != 'POST':
+        return redirect('admin_livreurs_list')
+    if not is_app_admin(request.user):
+        messages.error(request, "Accès refusé: réservé à l'administrateur de l'application.")
+        return redirect('accueil')
+    profil = get_object_or_404(ProfilLivreur.objects.select_related('user'), pk=livreur_id)
+    new_pwd = (request.POST.get('new_password') or '').strip()
+    if not new_pwd:
+        messages.error(request, "Le nouveau mot de passe est requis.")
+        return redirect('admin_livreurs_list')
+    try:
+        profil.user.set_password(new_pwd)
+        profil.user.save(update_fields=['password'])
+        messages.success(request, f"Mot de passe mis à jour pour {profil.user.username}.")
+    except Exception as e:
+        messages.error(request, f"Erreur lors de la mise à jour du mot de passe: {e}")
     return redirect('admin_livreurs_list')
 
 
@@ -1201,7 +1268,7 @@ def admin_produit_add(request):
             messages.error(request, "Veuillez corriger les erreurs ci-dessous.")
     else:
         form = ProduitForm()
-    return render(request, 'boutique_admin/produit_form.html', { 'categories': categories, 'mode': 'add', 'form': form })
+    return render(request, 'boutique_admin/produit_form.html', { 'categories': categories, 'mode': 'add', 'form': form, 'produit': None })
 
 
 @login_required

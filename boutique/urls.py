@@ -53,6 +53,8 @@ urlpatterns = [
     path('admin-dashboard/livreurs/ajouter/', views.admin_livreur_add, name='admin_livreur_add'),
     path('admin-dashboard/livreurs/<int:livreur_id>/modifier/', views.admin_livreur_edit, name='admin_livreur_edit'),
     path('admin-dashboard/livreurs/<int:livreur_id>/supprimer/', views.admin_livreur_delete, name='admin_livreur_delete'),
+    path('admin-dashboard/livreurs/<int:livreur_id>/reset-password/', views.admin_livreur_reset_password, name='admin_livreur_reset_password'),
+    path('admin-dashboard/livreurs/<int:livreur_id>/set-password/', views.admin_livreur_set_password, name='admin_livreur_set_password'),
 
     # Commandes & Clients (listing initial)
     path('admin-dashboard/commandes/', views.admin_commandes_list, name='admin_commandes_list'),

@@ -61,6 +61,10 @@ class ProfilLivreur(models.Model):
     actif = models.BooleanField(default=True, verbose_name="Livreur actif")
     date_embauche = models.DateField(auto_now_add=True, verbose_name="Date d'embauche")
     photo = models.ImageField(upload_to='livreurs/', blank=True, null=True, verbose_name="Photo")
+    # Nouveaux champs d'identité
+    date_naissance = models.DateField(blank=True, null=True, verbose_name="Date de naissance")
+    numero_cni = models.CharField(max_length=30, blank=True, null=True, unique=True, verbose_name="Numéro CNI")
+    quartier = models.CharField(max_length=100, blank=True, verbose_name="Quartier")
     
     class Meta:
         verbose_name = "Profil Livreur"
@@ -68,6 +72,15 @@ class ProfilLivreur(models.Model):
     
     def __str__(self):
         return f"Livreur {self.user.username}"
+
+    @property
+    def age(self):
+        from datetime import date
+        if not self.date_naissance:
+            return None
+        today = date.today()
+        years = today.year - self.date_naissance.year - ((today.month, today.day) < (self.date_naissance.month, self.date_naissance.day))
+        return years
 
 # Modèle pour le profil admin
 class ProfilAdmin(models.Model):

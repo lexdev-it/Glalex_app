@@ -35,9 +35,28 @@
           <label class="form-label">Mot de passe (laisser vide pour ne pas changer)</label>
           <input name="password" type="password" class="form-control" />
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
           <label class="form-label">Téléphone</label>
           <input name="telephone" class="form-control" value="{% if livreur %}{{ livreur.telephone }}{% endif %}" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Date de naissance</label>
+          <input name="date_naissance" type="date" class="form-control" value="{% if livreur and livreur.date_naissance %}{{ livreur.date_naissance|date:'Y-m-d' }}{% endif %}" />
+          {% if livreur and livreur.age %}
+            <div class="form-text">Âge: {{ livreur.age }} ans</div>
+          {% endif %}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Numéro CNI</label>
+          <input name="numero_cni" class="form-control" value="{% if livreur %}{{ livreur.numero_cni }}{% endif %}" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Quartier</label>
+          <input name="quartier" class="form-control" value="{% if livreur %}{{ livreur.quartier }}{% endif %}" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Zone de livraison</label>
+          <input name="zone_livraison" class="form-control" value="{% if livreur %}{{ livreur.zone_livraison }}{% endif %}" />
         </div>
         <div class="col-md-6">
           <label class="form-label">Véhicule</label>
@@ -46,10 +65,6 @@
         <div class="col-md-6">
           <label class="form-label">Numéro de permis</label>
           <input name="numero_permis" class="form-control" value="{% if livreur %}{{ livreur.numero_permis }}{% endif %}" />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Zone de livraison</label>
-          <input name="zone_livraison" class="form-control" value="{% if livreur %}{{ livreur.zone_livraison }}{% endif %}" />
         </div>
         <div class="col-md-6">
           <label class="form-label">Photo du livreur</label>
@@ -65,9 +80,15 @@
           <label for="chkActif" class="form-check-label">Actif</label>
         </div>
       </div>
-      <div class="mt-3">
+      <div class="mt-3 d-flex gap-2">
         <button class="btn btn-primary" type="submit">Enregistrer</button>
         <a href="{% url 'admin_livreurs_list' %}" class="btn btn-secondary">Annuler</a>
+        {% if livreur %}
+          <form method="post" action="{% url 'admin_livreur_reset_password' livreur.id %}" onsubmit="return confirm('Générer un mot de passe temporaire pour ce livreur ?');" class="d-inline">
+            {% csrf_token %}
+            <button class="btn btn-outline-warning" type="submit">Réinitialiser le mot de passe</button>
+          </form>
+        {% endif %}
       </div>
     </form>
   </div>

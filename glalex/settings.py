@@ -146,6 +146,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Email (dev: console backend; configure SMTP for prod)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+WHATSAPP_NUMBER = '2289305086'
+WHATSAPP_DEFAULT_TEXT = 'Bonjour, je souhaite des informations.'
 # Example SMTP config:
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST = 'smtp.example.com'

@@ -35,8 +35,12 @@
       <table class="table align-middle">
         <thead>
           <tr>
+            <th>Photo</th>
             <th>Nom d'utilisateur</th>
             <th>Téléphone</th>
+            <th>Âge</th>
+            <th>CNI</th>
+            <th>Quartier</th>
             <th>Véhicule</th>
             <th>Zone</th>
             <th>Actif</th>
@@ -46,8 +50,18 @@
         <tbody>
           {% for l in livreurs %}
             <tr>
+              <td>
+                {% if l.photo %}
+                  <img src="{{ l.photo.url }}" alt="{{ l.user.username }}" class="img-thumbnail" style="width:48px;height:48px;object-fit:cover;" />
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
               <td>{{ l.user.username }}</td>
               <td>{{ l.telephone|default:'-' }}</td>
+              <td>{% if l.age %}{{ l.age }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+              <td>{{ l.numero_cni|default:'—' }}</td>
+              <td>{{ l.quartier|default:'—' }}</td>
               <td>{{ l.vehicule|default:'-' }}</td>
               <td>{{ l.zone_livraison|default:'-' }}</td>
               <td>
@@ -58,16 +72,25 @@
                 {% endif %}
               </td>
               <td class="text-end">
-                <a href="{% url 'admin_livreur_edit' l.id %}" class="btn btn-sm btn-primary">Modifier</a>
-                <form method="post" action="{% url 'admin_livreur_delete' l.id %}" class="d-inline" onsubmit="return confirm('Désactiver {{ l.user.username }} ?');">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-sm btn-outline-danger">Désactiver</button>
-                </form>
+                <div class="d-flex flex-column align-items-end gap-2">
+                  <div class="d-flex gap-2">
+                    <a href="{% url 'admin_livreur_edit' l.id %}" class="btn btn-sm btn-primary">Modifier</a>
+                    <form method="post" action="{% url 'admin_livreur_delete' l.id %}" class="d-inline" onsubmit="return confirm('Désactiver {{ l.user.username }} ?');">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Désactiver</button>
+                    </form>
+                  </div>
+                  <form method="post" action="{% url 'admin_livreur_set_password' l.id %}" class="d-flex gap-2 align-items-center">
+                    {% csrf_token %}
+                    <input type="password" name="new_password" class="form-control form-control-sm" placeholder="Nouveau mot de passe" style="max-width: 220px;" required />
+                    <button type="submit" class="btn btn-sm btn-outline-warning" title="Remplacer le mot de passe">Mettre à jour</button>
+                  </form>
+                </div>
               </td>
             </tr>
           {% empty %}
             <tr>
-              <td colspan="6" class="text-center text-muted">Aucun livreur.</td>
+              <td colspan="10" class="text-center text-muted">Aucun livreur.</td>
             </tr>
           {% endfor %}
         </tbody>

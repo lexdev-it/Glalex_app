@@ -312,7 +312,7 @@
 
   <!-- Floating actions: WhatsApp + Back to top -->
   <div class="floating-actions">
-    <a id="waBtn" class="fab whatsapp" href="https://wa.me/?text=Bonjour%20Glalex" target="_blank" rel="noopener" title="WhatsApp">
+    <a id="waBtn" class="fab whatsapp" href="https://wa.me/{{ wa_number|urlencode }}?text={{ wa_text|urlencode }}" target="_blank" rel="noopener" title="WhatsApp">
       <i class="fab fa-whatsapp fa-lg"></i>
     </a>
     <button id="toTopBtn" class="fab top" type="button" title="Haut de page" style="display:none;">

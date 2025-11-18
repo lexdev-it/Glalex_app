@@ -18,6 +18,7 @@
   </nav>
 
   <div class="container py-4">
+    {% include 'includes/back_button.html' %}
     {% if messages %}
       {% for m in messages %}
         <div class="alert alert-{{ m.tags }}">{{ m }}</div>
@@ -49,7 +50,7 @@
             <input type="number" step="0.01" min="0" name="prix" 
                    class="form-control {% if form and form.prix.errors %}is-invalid{% endif %}"
                    value="{% if form %}{{ form.prix.value|default_if_none:'' }}{% else %}{{ produit.prix|default:'' }}{% endif %}" required />
-            <span class="input-group-text">€</span>
+            <span class="input-group-text">FCFA</span>
           </div>
           {% if form and form.prix.errors %}
             <div class="invalid-feedback">{{ form.prix.errors|first }}</div>
@@ -69,9 +70,13 @@
           <select name="categorie" class="form-select {% if form and form.categorie.errors %}is-invalid{% endif %}" required>
             <option value="">-- Choisir --</option>
             {% for c in categories %}
-              {% with selected_id=form.categorie.value|default_if_none:produit.categorie.id %}
-                <option value="{{ c.id }}" {% if selected_id|stringformat:'s' == c.id|stringformat:'s' %}selected{% endif %}>{{ c.nom }}</option>
-              {% endwith %}
+              <option value="{{ c.id }}"
+                {% if form and form.categorie.value %}
+                  {% if form.categorie.value|stringformat:'s' == c.id|stringformat:'s' %}selected{% endif %}
+                {% elif produit %}
+                  {% if produit.categorie.id|stringformat:'s' == c.id|stringformat:'s' %}selected{% endif %}
+                {% endif %}
+              >{{ c.nom }}</option>
             {% endfor %}
           </select>
           {% if form and form.categorie.errors %}
@@ -102,10 +107,14 @@
         </div>
         <div class="col-md-4 d-flex align-items-end">
           <div class="form-check form-switch">
-            {% with actif_val=form.actif.value if form else produit.actif %}
-              <input class="form-check-input" type="checkbox" name="actif" id="actifCheck" 
-                     {% if actif_val or not produit.id %}checked{% endif %}>
-            {% endwith %}
+            <input class="form-check-input" type="checkbox" name="actif" id="actifCheck"
+                   {% if form.is_bound %}
+                     {% if form.actif.value %}checked{% endif %}
+                   {% elif produit %}
+                     {% if produit.actif %}checked{% endif %}
+                   {% else %}
+                     checked
+                   {% endif %}>
             <label class="form-check-label" for="actifCheck">
               Actif
             </label>
